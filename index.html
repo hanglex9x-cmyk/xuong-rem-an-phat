@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
       :root{
         color-scheme: light;
@@ -256,6 +257,46 @@
         .kpi .dl{font-size:11.5px}
         .catalog{grid-template-columns:1fr}
       }
+      /* ---------- Báo giá / Hóa đơn (xuất PDF & in A5) ---------- */
+      .doc-export{border-top:1px dashed var(--line);margin-top:18px;padding-top:15px}
+      .doc-export-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px}
+      .doc-export-h svg{color:var(--accent-ink)}
+      .doc-btns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+      .doc-btns .btn{justify-content:center;text-align:center}
+      #modal .modal-card:has(.doc-preview){max-width:620px}
+      .doc-preview{border:1px solid var(--line);border-radius:10px;overflow-y:auto;max-height:56vh;background:#fff}
+      #pdf-stage{position:fixed;left:-10000px;top:0;width:559px;pointer-events:none}
+      #pdf-stage .doc-paper{width:559px;min-height:790px}
+      #print-area{display:none}
+      .doc-paper{background:#fff;color:#2B211A;font-family:'Inter',system-ui,sans-serif;font-size:12.5px;line-height:1.5;padding:26px 28px;width:100%}
+      .doc-top{display:flex;justify-content:space-between;gap:16px;border-bottom:2.5px solid #BC5818;padding-bottom:12px}
+      .doc-shop{font-size:17px;font-weight:800;letter-spacing:.01em;color:#8A3E0C}
+      .doc-shopsub{font-size:11px;color:#6B5847;margin-top:3px;line-height:1.55}
+      .doc-meta{text-align:right;font-size:11.5px;color:#6B5847;white-space:nowrap}
+      .doc-title{font-size:15.5px;font-weight:800;color:#2B211A;margin-bottom:3px}
+      .doc-cust{margin-top:12px;display:grid;gap:2px;font-size:12.5px}
+      .doc-lb{color:#7C6B5D}
+      .doc-tbl{width:100%;border-collapse:collapse;margin-top:13px;font-size:12.5px}
+      .doc-tbl th{text-align:left;background:#FBEEDD;color:#8A3E0C;padding:7px 9px;border:1px solid #E8DED1;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+      .doc-tbl td{padding:8px 9px;border:1px solid #E8DED1;vertical-align:top}
+      .doc-tbl .r,.doc-tbl th.r{text-align:right}
+      .doc-small{font-size:11px;color:#6B5847;margin-top:2px}
+      .doc-tot{margin-top:12px;margin-left:auto;width:62%;max-width:300px}
+      .doc-trow{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:12.5px}
+      .doc-trow.total{border-top:1.5px solid #BC5818;margin-top:4px;padding-top:8px;font-size:14.5px;font-weight:800}
+      .doc-trow .debt{color:#BC3324;font-weight:700}
+      .doc-words{margin:12px 0 0;font-size:12px}
+      .doc-note{margin:8px 0 0;font-size:11.5px;color:#514234}
+      .doc-sign{display:flex;justify-content:space-between;gap:20px;margin-top:26px;text-align:center;font-size:12.5px}
+      .doc-sign>div{flex:1}
+      .doc-sign .sign-space{height:52px}
+      .doc-foot{margin-top:20px;border-top:1px solid #E8DED1;padding-top:8px;text-align:center;font-size:11px;color:#7C6B5D}
+      @media print{
+        @page{size:A5 portrait;margin:6mm}
+        #app,#modal,#toast,#pdf-stage{display:none !important}
+        #print-area{display:block !important}
+        #print-area .doc-paper{padding:4mm 2mm;width:100%}
+      }
       @media (prefers-reduced-motion: reduce){
         *{transition:none !important}
       }
@@ -285,6 +326,8 @@
     </div>
     <div id="modal" role="dialog" aria-modal="true"></div>
     <div id="toast" role="status"></div>
+    <div id="print-area" aria-hidden="true"></div>
+    <div id="pdf-stage" aria-hidden="true"></div>
 
 <script>
 "use strict";
@@ -480,7 +523,9 @@ var ICONS = {
   cal:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   search:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>',
-  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>'
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>',
+  file:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>',
+  print:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
 };
 </script>
 
@@ -715,6 +760,12 @@ function orderModal(o){
       + STAGES.map(function(s,i){ return '<span class="chip' + (i<p.stage ? ' done' : (i===p.stage ? ' doing' : '')) + '">' + (i+1) + '. ' + esc(s) + '</span>'; }).join("") + '</div>'
       + '<p class="tiny muted" style="margin:6px 0 0">Vật tư chính: ' + esc(p.fabric) + ' · Hạn hoàn thiện: ' + p.deadline + '</p></div>';
   }
+  h += '<div style="margin-top:16px;border-top:1px dashed var(--line);padding-top:13px"><b class="small">Báo giá &amp; hóa đơn của đơn này</b><div class="doc-btns" style="margin-top:9px">'
+    + '<button class="btn small" data-act="order-doc" data-kind="quote" data-mode="pdf" data-id="' + o.id + '">' + ICONS.file + ' Xuất báo giá PDF</button>'
+    + '<button class="btn small" data-act="order-doc" data-kind="quote" data-mode="print" data-id="' + o.id + '">' + ICONS.print + ' In báo giá A5</button>'
+    + '<button class="btn small" data-act="order-doc" data-kind="invoice" data-mode="pdf" data-id="' + o.id + '">' + ICONS.file + ' Xuất hóa đơn PDF</button>'
+    + '<button class="btn small" data-act="order-doc" data-kind="invoice" data-mode="print" data-id="' + o.id + '">' + ICONS.print + ' In hóa đơn A5</button>'
+    + '</div></div>';
   h += '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:18px">';
   var idx = ORDER_FLOW.indexOf(o.status);
   if (idx < ORDER_FLOW.length-1){
@@ -727,7 +778,7 @@ function orderModal(o){
 
 /* ================= TẠO ĐƠN / BÁO GIÁ ================= */
 function viewOrderNew(){
-  var h = head("Tạo đơn / Báo giá mới", "Giá tính theo kích thước: diện tích (ngang × cao × số bộ) × đơn giá/m² của loại rèm, cộng phụ kiện nếu có. Đặt cọc thường 50%.", true);
+  var h = head("Tạo đơn / Báo giá mới", "Giá tính theo kích thước: diện tích (ngang × cao × số bộ) × đơn giá/m² của loại rèm, cộng phụ kiện nếu có. Đặt cọc thường 50%. Ngay tại đây cũng xuất được báo giá & hóa đơn PDF hoặc in khổ A5.", true);
   h += '<div class="grid" style="grid-template-columns:1.25fr .85fr;gap:16px;align-items:start"><div class="card card-pad">';
   h += '<div class="form-grid">'
     + '<div class="fld"><label>Khách hàng</label><select class="sel" id="f-cust">' + DB.customers.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + ' — ' + esc(c.phone) + '</option>'; }).join("") + '<option value="__new">+ Khách mới…</option></select></div>'
@@ -743,6 +794,13 @@ function viewOrderNew(){
     + '</div>';
   h += '<label style="display:flex;gap:10px;align-items:center;margin-top:14px;cursor:pointer;min-height:36px"><input type="checkbox" id="f-deposit" style="width:19px;height:19px;accent-color:var(--accent)"/><span><b>Khách đã đặt cọc 50%</b> — đơn chuyển thẳng sang “Đã cọc” và tự tạo lệnh sản xuất</span></label>';
   h += '<div style="display:flex;gap:9px;margin-top:16px;flex-wrap:wrap"><button class="btn primary" data-act="create-order">' + ICONS.check + ' Tạo đơn hàng</button><button class="btn" data-act="go" data-id="orders">Xem danh sách đơn</button></div>';
+  h += '<div class="doc-export"><div class="doc-export-h">' + ICONS.file + ' Báo giá &amp; hóa đơn</div>'
+    + '<div class="doc-btns">'
+    + '<button class="btn" data-act="form-doc" data-kind="quote" data-mode="pdf">' + ICONS.file + ' Xuất báo giá PDF</button>'
+    + '<button class="btn" data-act="form-doc" data-kind="quote" data-mode="print">' + ICONS.print + ' In báo giá A5</button>'
+    + '<button class="btn" data-act="form-doc" data-kind="invoice" data-mode="pdf">' + ICONS.file + ' Xuất hóa đơn PDF</button>'
+    + '<button class="btn" data-act="form-doc" data-kind="invoice" data-mode="print">' + ICONS.print + ' In hóa đơn A5</button>'
+    + '</div><p class="tiny muted" style="margin:9px 0 0">Xuất thẳng từ số liệu đang nhập ở form — tải file PDF về máy hoặc xem trước bản in khổ A5, không cần tạo đơn trước. Sau khi tạo đơn, mở chi tiết đơn trong danh sách để xuất lại bất cứ lúc nào.</p></div>';
   h += '</div>';
   h += '<div style="display:grid;gap:16px"><div class="card" style="overflow:hidden;padding:0"><img id="f-img" src="' + TYPES[state.preType||"vai2lop"].img + '" alt="Ảnh mẫu loại rèm đang chọn" style="width:100%;height:180px;object-fit:cover"/><div class="card-pad" style="padding-top:13px"><b id="f-typename">' + TYPES[state.preType||"vai2lop"].name + '</b><p class="small muted" style="margin:3px 0 0" id="f-typedesc">' + TYPES[state.preType||"vai2lop"].desc + '</p></div></div>'
     + '<div class="calc-box"><div class="row"><span>Diện tích</span><b class="num" id="c-area">—</b></div><div class="row"><span>Tiền rèm</span><b class="num" id="c-fabric">—</b></div><div class="row"><span>Tiền phụ kiện</span><b class="num" id="c-acc">—</b></div><div class="row total"><span>Thành tiền</span><span class="num" id="c-total">—</span></div><div class="row"><span>Đặt cọc 50%</span><b class="num" id="c-dep">—</b></div><div class="row"><span>Còn lại khi lắp xong</span><b class="num" id="c-rest">—</b></div></div></div></div>';
@@ -766,6 +824,125 @@ function calcOrder(){
   document.getElementById("c-dep").textContent = fmt(Math.round(total/2));
   document.getElementById("c-rest").textContent = fmt(total - Math.round(total/2));
   return {type:type, w:w, h:hh, qty:qty, area:area, acc:acc, accQty:accQty, accAmt:accAmt, total:total};
+}
+
+/* ================= BÁO GIÁ & HÓA ĐƠN — xuất PDF / in A5 ================= */
+var DOCCTX = null;
+function soTienBangChu(n){
+  n = Math.round(n);
+  if (n===0) return "Không đồng";
+  var dv = ["không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+  var donVi = ["", " nghìn", " triệu", " tỷ", " nghìn tỷ", " triệu tỷ"];
+  function docNhom(x, coHangTram){
+    var tram = Math.floor(x/100), chuc = Math.floor((x%100)/10), le = x%10, parts = [];
+    if (tram>0 || coHangTram) parts.push(dv[tram] + " trăm");
+    if (chuc===0){ if (le>0 && parts.length) parts.push("linh"); }
+    else if (chuc===1) parts.push("mười");
+    else parts.push(dv[chuc] + " mươi");
+    if (le>0){
+      if (chuc===1 && le===1) parts.push("một");
+      else if (chuc>1 && le===1) parts.push("mốt");
+      else if (chuc>=1 && le===5) parts.push("lăm");
+      else parts.push(dv[le]);
+    }
+    return parts.join(" ");
+  }
+  var groups = [];
+  while (n>0){ groups.push(n%1000); n = Math.floor(n/1000); }
+  var out = [];
+  for (var g = groups.length-1; g>=0; g--){
+    if (groups[g]===0) continue;
+    out.push(docNhom(groups[g], g < groups.length-1) + donVi[g]);
+  }
+  var s = out.join(" ").replace(/\s+/g, " ").trim();
+  return s.charAt(0).toUpperCase() + s.slice(1) + " đồng";
+}
+function formDocOrder(){
+  var r = calcOrder();
+  var custSel = document.getElementById("f-cust").value, c;
+  if (custSel==="__new"){
+    var nm = document.getElementById("f-newcust").value.trim();
+    c = {name: nm || "Khách mới", phone: "—", addr: ""};
+  } else c = cust(custSel);
+  var dep = document.getElementById("f-deposit").checked;
+  return { id: "DH" + (2600 + DB.orders.length + 1), custName: c.name, custPhone: c.phone, custAddr: c.addr,
+    type: r.type, w: r.w, h: r.h, qty: r.qty, area: r.area, acc: r.accAmt>0 ? (r.acc.name + " × " + fmtN(r.accQty) + " " + r.acc.unit) : "", accAmt: r.accAmt,
+    total: r.total, collected: dep ? Math.round(r.total/2) : 0, date: "11/11/2026",
+    install: document.getElementById("f-install").value.trim() || "20/11/2026",
+    note: document.getElementById("f-note").value.trim(), valid: r.area>0 && r.qty>0 };
+}
+function orderDocOrder(o){
+  var c = cust(o.cust);
+  return { id: o.id, custName: c.name, custPhone: c.phone, custAddr: c.addr, type: o.type, w: o.w, h: o.h, qty: o.qty,
+    area: o.area, acc: o.acc, accAmt: o.accAmt, total: o.total, collected: o.collected, date: o.date, install: o.install, note: o.note, valid: true };
+}
+function docHTML(o, kind){
+  var isQ = kind==="quote";
+  var t = TYPES[o.type];
+  var fabricAmt = o.total - (o.accAmt||0);
+  var dep = Math.round(o.total/2);
+  var debt = Math.max(0, o.total - o.collected);
+  var h = '<div class="doc-paper">';
+  h += '<div class="doc-top"><div><div class="doc-shop">XƯỞNG RÈM AN PHÁT</div><div class="doc-shopsub">Sản xuất &amp; lắp đặt rèm cửa theo kích thước đo thực tế<br/>128 Nguyễn Văn Quá, P. Đông Hưng Thuận, Quận 12, TP.HCM<br/>Điện thoại: 0909 452 117 · Giờ làm: 7:30–17:30 (Thứ 2 – Thứ 7)</div></div>'
+    + '<div class="doc-meta"><div class="doc-title">' + (isQ ? "BÁO GIÁ RÈM CỬA" : "HÓA ĐƠN BÁN HÀNG") + '</div><div>Số: <b>' + (isQ ? "BG-" : "HĐ-") + o.id + '</b></div><div>Ngày: ' + esc(o.date) + '</div><div>Đơn hàng: ' + esc(o.id) + '</div></div></div>';
+  h += '<div class="doc-cust"><div><span class="doc-lb">Khách hàng:</span> <b>' + esc(o.custName) + '</b></div>'
+    + '<div><span class="doc-lb">Điện thoại:</span> ' + esc(o.custPhone || "—") + '</div>';
+  if (o.custAddr) h += '<div><span class="doc-lb">Địa chỉ:</span> ' + esc(o.custAddr) + '</div>';
+  h += '<div><span class="doc-lb">Ngày hẹn lắp:</span> ' + esc(o.install || "—") + '</div></div>';
+  h += '<table class="doc-tbl"><thead><tr><th style="width:28px">STT</th><th>Hạng mục</th><th class="r">Số lượng</th><th class="r">Đơn giá</th><th class="r">Thành tiền</th></tr></thead><tbody>';
+  h += '<tr><td>1</td><td><b>' + esc(t.name) + '</b><div class="doc-small">Kích thước: ' + o.w + ' m × ' + o.h + ' m/bộ · Tổng diện tích: ' + fmtN(o.area) + ' m²</div></td><td class="r num">' + o.qty + ' bộ</td><td class="r num">' + fmt(t.price) + '/m²</td><td class="r num"><b>' + fmt(fabricAmt) + '</b></td></tr>';
+  if (o.accAmt>0) h += '<tr><td>2</td><td><b>Phụ kiện</b><div class="doc-small">' + esc(o.acc) + '</div></td><td class="r">—</td><td class="r">—</td><td class="r num"><b>' + fmt(o.accAmt) + '</b></td></tr>';
+  h += '</tbody></table>';
+  h += '<div class="doc-tot"><div class="doc-trow total"><span>Tổng cộng</span><span class="num">' + fmt(o.total) + '</span></div>';
+  if (isQ){
+    h += '<div class="doc-trow"><span>Đặt cọc 50% khi chốt đơn</span><span class="num">' + fmt(dep) + '</span></div>'
+      + '<div class="doc-trow"><span>Còn lại khi lắp xong</span><span class="num">' + fmt(o.total - dep) + '</span></div>';
+  } else {
+    h += '<div class="doc-trow"><span>Đã thanh toán</span><span class="num">' + fmt(o.collected) + '</span></div>'
+      + '<div class="doc-trow"><span>Còn nợ</span><span class="num' + (debt>0 ? " debt" : "") + '">' + (debt>0 ? fmt(debt) : "Đã thu đủ") + '</span></div>';
+  }
+  h += '</div>';
+  h += '<p class="doc-words"><i>Bằng chữ: ' + esc(soTienBangChu(o.total)) + '.</i></p>';
+  if (isQ) h += '<p class="doc-note">Báo giá đã gồm công đo, may và lắp đặt trong nội thành TP.HCM. Báo giá có giá trị trong 15 ngày kể từ ngày phát hành. Khách đặt cọc 50% để xưởng tiến hành sản xuất; phần còn lại thanh toán sau khi lắp đặt và nghiệm thu xong.</p>';
+  else h += '<p class="doc-note">Đề nghị quý khách kiểm tra hàng và ký nghiệm thu khi lắp đặt xong. Số tiền còn nợ (nếu có) thanh toán ngay khi hoàn thành lắp đặt — tiền mặt hoặc chuyển khoản theo thông tin xưởng cung cấp.</p>';
+  if (o.note) h += '<p class="doc-note">Ghi chú đơn: ' + esc(o.note) + '</p>';
+  h += '<div class="doc-sign"><div><b>Khách hàng</b><div class="doc-small">(Ký, ghi rõ họ tên)</div><div class="sign-space"></div></div><div><b>Xưởng Rèm An Phát</b><div class="doc-small">(Ký, đóng dấu)</div><div class="sign-space"></div></div></div>';
+  h += '<div class="doc-foot">Cảm ơn quý khách đã tin tưởng Xưởng Rèm An Phát · Hotline 0909 452 117</div>';
+  h += '</div>';
+  return h;
+}
+function exportDocPDF(o, kind){
+  if (typeof html2pdf === "undefined"){
+    toast("Chưa tải được thư viện PDF — hãy dùng bản xem trước A5 rồi chọn Lưu thành PDF khi in.");
+    openDocPreview(o, kind);
+    return;
+  }
+  var stage = document.getElementById("pdf-stage");
+  stage.innerHTML = docHTML(o, kind);
+  var fname = (kind==="quote" ? "Bao-gia-" : "Hoa-don-") + o.id + "-A5.pdf";
+  toast("Đang tạo file PDF…");
+  html2pdf().set({ margin: 0, filename: fname, image: {type: "jpeg", quality: 0.96},
+    html2canvas: {scale: 2, useCORS: true, backgroundColor: "#ffffff"},
+    jsPDF: {unit: "mm", format: "a5", orientation: "portrait"} })
+    .from(stage.firstChild).save()
+    .then(function(){ stage.innerHTML = ""; toast("Đã tải xuống " + fname); })
+    .catch(function(){ stage.innerHTML = ""; toast("Tạo PDF chưa được — thử In A5 rồi chọn Lưu thành PDF."); });
+}
+function printDoc(o, kind){
+  document.getElementById("print-area").innerHTML = docHTML(o, kind);
+  setTimeout(function(){ window.print(); }, 80);
+}
+function openDocPreview(o, kind){
+  DOCCTX = {o: o, kind: kind};
+  var isQ = kind==="quote";
+  openModal('<h3>' + (isQ ? "Báo giá" : "Hóa đơn") + ' ' + o.id + ' — bản in khổ A5</h3>'
+    + '<p class="sub" style="margin:0 0 12px">' + esc(o.custName) + ' · Tổng cộng <b>' + fmt(o.total) + '</b> — kiểm tra nội dung bên dưới rồi in hoặc tải PDF.</p>'
+    + '<div class="doc-preview">' + docHTML(o, kind) + '</div>'
+    + '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:15px">'
+    + '<button class="btn primary" data-act="doc-print-now">' + ICONS.print + ' In khổ A5</button>'
+    + '<button class="btn" data-act="doc-pdf-now">' + ICONS.file + ' Tải file PDF</button>'
+    + '<button class="btn ghost" data-act="close-modal">Đóng</button></div>'
+    + '<p class="tiny muted" style="margin:10px 0 0">Trong hộp thoại in, chọn khổ giấy A5 (hoặc “Lưu thành PDF” nếu muốn lưu file thay vì in).</p>');
 }
 
 /* ================= KHÁCH HÀNG ================= */
@@ -1155,6 +1332,22 @@ document.addEventListener("click", function(ev){
     toast("Đã tạo đơn " + oid + " — " + fmt(r.total) + (dep ? " · đã thu cọc " + fmt(Math.round(r.total/2)) + " & tạo lệnh sản xuất" : " · đang ở trạng thái Báo giá"));
     state.fStatus = "Tất cả"; state.q = ""; go("orders");
   }
+  else if (act==="form-doc"){
+    var fo = formDocOrder();
+    if (!fo.valid){ toast("Vui lòng nhập kích thước & số bộ hợp lệ trước khi xuất chứng từ."); return; }
+    if (el.getAttribute("data-mode")==="pdf") exportDocPDF(fo, el.getAttribute("data-kind"));
+    else openDocPreview(fo, el.getAttribute("data-kind"));
+  }
+  else if (act==="order-doc"){
+    var od = orderById(id);
+    if (od){
+      var ol = orderDocOrder(od);
+      if (el.getAttribute("data-mode")==="pdf") exportDocPDF(ol, el.getAttribute("data-kind"));
+      else openDocPreview(ol, el.getAttribute("data-kind"));
+    }
+  }
+  else if (act==="doc-pdf-now"){ if (DOCCTX) exportDocPDF(DOCCTX.o, DOCCTX.kind); }
+  else if (act==="doc-print-now"){ if (DOCCTX) printDoc(DOCCTX.o, DOCCTX.kind); }
   else if (act==="order-with"){ state.preType = id; go("order-new"); }
   else if (act==="accent"){
     state.accent = parseInt(id);
