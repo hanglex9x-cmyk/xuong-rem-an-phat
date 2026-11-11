@@ -297,6 +297,21 @@
         #print-area{display:block !important}
         #print-area .doc-paper{padding:4mm 2mm;width:100%}
       }
+      /* ---------- Kết nối MISA meInvoice ---------- */
+      .misa-mark{width:46px;height:46px;flex:0 0 46px;border-radius:12px;background:#0B5FA5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px}
+      .flow-step{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line2)}
+      .flow-step:last-child{border-bottom:0;padding-bottom:2px}
+      .flow-step .n{width:27px;height:27px;flex:0 0 27px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+      .flow-step b{font-size:14px;display:block}
+      .flow-step p{margin:1px 0 0;font-size:13px;color:var(--muted)}
+      .ck-list{display:grid;gap:9px}
+      .ck-item{display:flex;gap:10px;font-size:13.5px;align-items:flex-start}
+      .ck-item .ck{width:20px;height:20px;flex:0 0 20px;border-radius:6px;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;margin-top:1px}
+      .sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+      @media (max-width:760px){
+        .sign-grid{grid-template-columns:1fr}
+        .misa-cols{grid-template-columns:1fr !important}
+      }
       @media (prefers-reduced-motion: reduce){
         *{transition:none !important}
       }
@@ -476,13 +491,27 @@ var PIECE0 = [
   {name:"Đỗ Văn Kiên", role:"Thợ lắp đặt", unit:"bộ đã lắp", qty:18, rate:25000, ref:"DH2604, 09, 18"}
 ];
 
+/* Kết nối MISA meInvoice (mô phỏng trong bản demo) — hóa đơn gắn theo đơn hàng */
+var MISA0 = {
+  connected:false, checking:false,
+  mst:"0312857461", account:"ketoan@remanphat.vn", apikey:"", template:"1", serial:"C26TAP",
+  env:"sandbox", sign:"esign", nextNo:128,
+  invoices:[
+    {order:"DH2604", status:"Đã phát hành", no:"0000121", code:"AP26-000121-MISA", date:"05/11/2026"},
+    {order:"DH2609", status:"Đã phát hành", no:"0000124", code:"AP26-000124-MISA", date:"04/11/2026"},
+    {order:"DH2614", status:"Đã phát hành", no:"0000127", code:"AP26-000127-MISA", date:"03/11/2026"},
+    {order:"DH2618", status:"Chờ phát hành", no:"", code:"", date:""},
+    {order:"DH2606", status:"Chờ phát hành", no:"", code:"", date:""}
+  ]
+};
+
 /* ============ State (chỉ trong phiên xem — tải lại trang là về dữ liệu mẫu) ============ */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 var DB = {};
 function resetDB(){
   DB = { customers: clone(CUSTOMERS0), orders: clone(ORDERS0), prod: clone(PROD0),
          stock: clone(STOCK0), moves: clone(MOVES0), expenses: clone(EXPENSES0),
-         installs: clone(INSTALLS0), staff: clone(STAFF0), piece: clone(PIECE0) };
+         installs: clone(INSTALLS0), staff: clone(STAFF0), piece: clone(PIECE0), misa: clone(MISA0) };
 }
 resetDB();
 
@@ -552,7 +581,8 @@ var NAV = [
   ]},
   {id:"g-fin", name:"Tài chính", icon:"money", children:[
     {id:"finance", name:"Thu – chi", desc:"Thu cọc / thu đủ theo đơn, chi mua vải & phụ kiện"},
-    {id:"debts", name:"Công nợ khách hàng", desc:"Số tiền khách còn nợ theo từng đơn"}
+    {id:"debts", name:"Công nợ khách hàng", desc:"Số tiền khách còn nợ theo từng đơn"},
+    {id:"misa", name:"Hóa đơn điện tử MISA", desc:"Kết nối MISA meInvoice — phát hành HĐĐT & ký số từ đơn hàng"}
   ]},
   {id:"g-hr", name:"Nhân sự", icon:"users", children:[
     {id:"staff", name:"Danh sách thợ", desc:"8 nhân sự: chủ xưởng, thợ cắt, may, lắp đặt"},
@@ -1166,6 +1196,9 @@ function viewSettings(){
   h += '<div class="card card-pad"><h3>Màu chủ đạo giao diện</h3><div class="sub">Tông ấm hợp ngành rèm — bấm để đổi ngay</div><div class="swatches" style="margin-top:12px">'
     + ACCENTS.map(function(a,i){ return '<button class="swatch' + (state.accent===i ? ' sel' : '') + '" data-act="accent" data-id="' + i + '" style="background:' + a.a + '" title="' + a.name + '" aria-label="' + a.name + '"></button>'; }).join("")
     + '</div><p class="small muted" style="margin:10px 0 0">' + ACCENTS[state.accent].name + '</p></div>';
+  h += '<div class="card card-pad"><h3>Hóa đơn điện tử — MISA meInvoice</h3><div class="sub">Kết nối meInvoice để phát hành hóa đơn điện tử &amp; ký số ngay từ đơn hàng, không nhập liệu 2 lần</div>'
+    + '<div style="margin-top:11px">' + (DB.misa.connected ? '<span class="tag green">Đã kết nối (mô phỏng)</span>' : '<span class="tag gray">Chưa kết nối</span>') + '</div>'
+    + '<button class="btn" style="margin-top:12px" data-act="go" data-id="misa">' + ICONS.file + ' Mở màn hình kết nối MISA</button></div>';
   h += '<div class="card card-pad"><h3>Về bản demo này</h3><p class="small muted" style="margin:6px 0 0">Đây là bản <b>demo tĩnh</b> với dữ liệu mẫu của “Xưởng Rèm An Phát”: 12 khách hàng, 18 đơn hàng, 14 lệnh sản xuất, 24 mặt hàng kho — số liệu khớp nhau giữa các mục (đơn ↔ lệnh sản xuất ↔ phiếu thu ↔ lịch lắp).<br/><br/>Mọi thao tác thêm/sửa (tạo đơn, chuyển trạng thái, xong công đoạn, nhập/xuất kho, thu tiền…) chỉ chạy <b>trong phiên xem hiện tại</b>; tải lại trang là quay về dữ liệu mẫu ban đầu. Bản chính thức sẽ nối dữ liệu thật (Google Sheet / cơ sở dữ liệu riêng của xưởng) để lưu trữ lâu dài và dùng chung nhiều máy.</p>'
     + '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:13px"><button class="btn" data-act="reset">Đặt lại dữ liệu mẫu</button><button class="btn" data-act="home">Về Trang Chủ</button></div></div>';
   h += '<div class="card card-pad"><h3>Bản quyền</h3><p class="small muted" style="margin:6px 0 0">Phần mềm quản lý xưởng sản xuất rèm cửa — phát triển theo khung “Phần Mềm Quản Lý” theo ngành.<br/><b style="color:var(--ink)">Bản quyền thuộc sở hữu của hanglex9x@gmail.com</b></p></div>';
@@ -1173,11 +1206,106 @@ function viewSettings(){
   return h;
 }
 
+/* ================= KẾT NỐI MISA meInvoice ================= */
+function signName(s){
+  return {"esign":"Chữ ký số từ xa MISA eSign","token":"USB Token + MISA KYSO","hsm":"HSM — ký tự động tại máy chủ MISA"}[s] || s;
+}
+function misaInvTag(inv){
+  if (inv.status==="Đã phát hành") return '<span class="tag green">' + ICONS.check + ' Đã phát hành</span>';
+  return '<span class="tag gray">Chờ phát hành</span>';
+}
+function viewMisa(){
+  var m = DB.misa;
+  var h = head("Kết nối MISA meInvoice", "Phát hành hóa đơn điện tử & ký số ngay từ đơn hàng: app đẩy dữ liệu đơn sang meInvoice, hóa đơn được ký số, gửi cơ quan thuế và trả số hóa đơn về app — không nhập liệu 2 lần.", true);
+  /* --- Trạng thái kết nối --- */
+  h += '<div class="card card-pad" style="margin-bottom:16px"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">'
+    + '<span class="misa-mark">M</span>'
+    + '<div style="flex:1;min-width:210px"><h3 style="margin:0">MISA meInvoice</h3><div class="sub">Hóa đơn điện tử &amp; chữ ký số · Môi trường: <b>' + (m.env==="prod" ? "Chính thức" : "Sandbox (thử nghiệm)") + '</b> · Ký số: <b>' + signName(m.sign) + '</b></div></div>'
+    + (m.connected
+        ? '<span class="tag green">' + ICONS.check + ' Đã kết nối</span><button class="btn" data-act="misa-disconnect">Ngắt kết nối</button>'
+        : '<span class="tag gray">Chưa kết nối</span><button class="btn primary" data-act="misa-test"' + (m.checking ? ' disabled' : '') + '>' + (m.checking ? "Đang kiểm tra kết nối…" : "Kiểm tra kết nối") + '</button>')
+    + '</div>'
+    + (m.connected
+        ? '<p class="small" style="margin:12px 0 0;color:var(--ok)"><b>Kết nối OK (mô phỏng):</b> meInvoice đã nhận diện MST ' + esc(m.mst) + ' · Mẫu số ' + esc(m.template) + ' · Ký hiệu ' + esc(m.serial) + '. Có thể phát hành hóa đơn cho các đơn ở bảng dưới cùng trang.</p>'
+        : '<p class="small muted" style="margin:12px 0 0">Điền thông tin kết nối bên dưới rồi bấm “Kiểm tra kết nối”. Trong bản demo, bước kiểm tra này là mô phỏng — chưa gửi dữ liệu thật sang MISA.</p>')
+    + '</div>';
+  /* --- Form kết nối + luồng phát hành --- */
+  h += '<div class="grid misa-cols" style="grid-template-columns:1.05fr .95fr;gap:16px;align-items:start;margin-bottom:16px">';
+  h += '<div class="card card-pad"><h3>Thông tin kết nối</h3><div class="sub">MISA cấp các thông tin này khi doanh nghiệp đăng ký tích hợp API meInvoice</div>'
+    + '<div class="form-grid" style="margin-top:13px">'
+    + '<div class="fld"><label>Mã số thuế doanh nghiệp</label><input class="inp" id="m-mst" inputmode="numeric" value="' + esc(m.mst) + '"/></div>'
+    + '<div class="fld"><label>Tài khoản meInvoice</label><input class="inp" id="m-account" value="' + esc(m.account) + '"/></div>'
+    + '<div class="fld"><label>App ID / API key</label><input class="inp" id="m-apikey" type="password" value="' + esc(m.apikey) + '" placeholder="Khóa do MISA cấp khi đăng ký tích hợp" autocomplete="off"/></div>'
+    + '<div class="fld"><label>Phương thức ký số</label><select class="sel" id="m-sign">'
+    + '<option value="esign"' + (m.sign==="esign" ? " selected" : "") + '>Chữ ký số từ xa — MISA eSign</option>'
+    + '<option value="token"' + (m.sign==="token" ? " selected" : "") + '>USB Token + công cụ MISA KYSO</option>'
+    + '<option value="hsm"' + (m.sign==="hsm" ? " selected" : "") + '>HSM — ký tự động tại máy chủ MISA</option></select></div>'
+    + '<div class="fld"><label>Mẫu số hóa đơn</label><select class="sel" id="m-template">'
+    + '<option value="1"' + (m.template==="1" ? " selected" : "") + '>Mẫu số 1</option>'
+    + '<option value="2"' + (m.template==="2" ? " selected" : "") + '>Mẫu số 2</option></select></div>'
+    + '<div class="fld"><label>Ký hiệu hóa đơn</label><input class="inp" id="m-serial" value="' + esc(m.serial) + '"/></div>'
+    + '<div class="fld"><label>Môi trường kết nối</label><select class="sel" id="m-env">'
+    + '<option value="sandbox"' + (m.env==="sandbox" ? " selected" : "") + '>Sandbox — môi trường thử nghiệm của MISA</option>'
+    + '<option value="prod"' + (m.env==="prod" ? " selected" : "") + '>Chính thức — phát hành thật lên cơ quan thuế</option></select></div>'
+    + '</div>'
+    + '<p class="small muted" style="margin:12px 0 0">Mẫu số &amp; ký hiệu phải được đăng ký với cơ quan thuế trước khi phát hành. App ID / API key là thông tin bí mật — ở bản chính thức, khóa này được giữ ở phía máy chủ (Apps Script / backend) chứ không nằm trong trang web công khai.</p></div>';
+  h += '<div style="display:grid;gap:16px">';
+  h += '<div class="card card-pad"><h3>Hóa đơn được phát hành như thế nào</h3>'
+    + '<div class="flow-step"><span class="n">1</span><div><b>Đơn hàng chốt trong app</b><p>Khách hàng, MST người mua, dòng hàng, thuế VAT và tổng tiền lấy thẳng từ đơn — không nhập lại bên meInvoice.</p></div></div>'
+    + '<div class="flow-step"><span class="n">2</span><div><b>Đẩy dữ liệu qua Open API</b><p>App gọi API của MISA meInvoice — có môi trường Sandbox để kiểm tra trước khi chạy thật.</p></div></div>'
+    + '<div class="flow-step"><span class="n">3</span><div><b>Ký số &amp; gửi cơ quan thuế</b><p>meInvoice ký bằng chữ ký số của xưởng và truyền dữ liệu hóa đơn lên cơ quan thuế.</p></div></div>'
+    + '<div class="flow-step"><span class="n">4</span><div><b>Số hóa đơn trả về app</b><p>Số hóa đơn, mã tra cứu và bản PDF hóa đơn điện tử hiện ngay trong danh sách dưới đây để nhân viên theo dõi.</p></div></div>'
+    + '</div>';
+  h += '<div class="card card-pad"><h3>Xưởng cần chuẩn bị</h3><div class="sub" style="margin-bottom:11px">Phần này xưởng đăng ký &amp; thanh toán trực tiếp với MISA</div><div class="ck-list">'
+    + '<div class="ck-item"><span class="ck">' + ICONS.check + '</span><span>Tài khoản <b>MISA meInvoice</b> + gói số lượng hóa đơn theo nhu cầu của xưởng</span></div>'
+    + '<div class="ck-item"><span class="ck">' + ICONS.check + '</span><span><b>Chữ ký số còn hạn</b> — USB Token, hoặc đăng ký MISA eSign để ký từ xa</span></div>'
+    + '<div class="ck-item"><span class="ck">' + ICONS.check + '</span><span>Đăng ký <b>mẫu số / ký hiệu hóa đơn</b> với cơ quan thuế (MISA hỗ trợ thủ tục này)</span></div>'
+    + '<div class="ck-item"><span class="ck">' + ICONS.check + '</span><span>Cấp thông tin tích hợp API: <b>MST, tài khoản meInvoice, App ID / API key</b></span></div>'
+    + '</div></div>';
+  h += '</div></div>';
+  /* --- 3 cách ký số --- */
+  h += '<div class="group-label"><h3>3 cách ký số</h3><span>chọn theo cách xưởng vận hành</span></div><div class="sign-grid" style="margin-bottom:4px">'
+    + '<div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">USB Token</h3><span class="tag gray">Ký duyệt tay</span></div><p class="small muted" style="margin:7px 0 0">Cắm token ở máy tính của xưởng, cài thêm công cụ MISA KYSO. Hóa đơn đẩy sang meInvoice ở dạng nháp — kế toán đăng nhập, duyệt ký rồi mới phát hành. Hợp khi xưởng xuất ít hóa đơn và muốn kiểm soát từng tờ.</p></div>'
+    + '<div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">MISA eSign — ký từ xa</h3><span class="tag orange">Hợp nhất cho web app</span></div><p class="small muted" style="margin:7px 0 0">Chữ ký số lưu trên hệ thống MISA, ký tự động khi phát hành — không cần cắm token, không cần duyệt tay. Nhân viên bấm “Phát hành” ngay trong app là hóa đơn đi thẳng lên cơ quan thuế.</p></div>'
+    + '<div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">HSM</h3><span class="tag gray">Số lượng lớn</span></div><p class="small muted" style="margin:7px 0 0">Chữ ký số đặt trên máy chủ HSM của MISA, ký nhanh với số lượng lớn, ổn định cho doanh nghiệp phát hành nhiều hóa đơn mỗi ngày.</p></div>'
+    + '</div>';
+  /* --- Hóa đơn theo đơn --- */
+  var issued = m.invoices.filter(function(x){ return x.status==="Đã phát hành"; }).length;
+  h += '<div class="card tbl-wrap" style="margin-top:16px"><div class="card-pad" style="padding-bottom:4px"><h3>Hóa đơn điện tử theo đơn hàng</h3><div class="sub">' + issued + '/' + m.invoices.length + ' hóa đơn đã phát hành qua meInvoice · Bấm “Phát hành” để đẩy đơn sang MISA ký số' + (m.connected ? '' : ' — cần bấm “Kiểm tra kết nối” trước') + '</div></div>'
+    + '<table class="tbl"><thead><tr><th>Đơn</th><th>Khách hàng</th><th class="r">Tổng tiền</th><th>Trạng thái HĐĐT</th><th>Số HĐ / mã tra cứu</th><th></th></tr></thead><tbody>';
+  m.invoices.forEach(function(inv){
+    var o = orderById(inv.order); if (!o) return;
+    var c = cust(o.cust);
+    h += '<tr><td><b>' + o.id + '</b><div class="tiny muted">' + esc(o.date) + ' · ' + esc(TYPES[o.type].name) + '</div></td>'
+      + '<td>' + esc(c.name) + '<div class="tiny muted">' + esc(c.phone) + '</div></td>'
+      + '<td class="r num money">' + fmt(o.total) + '</td>'
+      + '<td>' + misaInvTag(inv) + (inv.date ? '<div class="tiny muted" style="margin-top:3px">Phát hành ' + inv.date + '</div>' : '') + '</td>'
+      + '<td>' + (inv.no ? '<b class="num">' + inv.no + '</b><div class="tiny muted">Mã tra cứu: ' + esc(inv.code) + '</div>' : '<span class="muted">—</span>') + '</td>'
+      + '<td class="r" style="white-space:nowrap">' + (inv.status==="Đã phát hành"
+          ? '<button class="btn small" data-act="misa-view" data-id="' + o.id + '">' + ICONS.file + ' Xem hóa đơn</button>'
+          : '<button class="btn small primary" data-act="misa-issue" data-id="' + o.id + '">Phát hành</button> <button class="btn small" data-act="misa-view" data-id="' + o.id + '">Xem trước</button>')
+      + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  /* --- Lưu ý bản demo --- */
+  h += '<div class="card card-pad" style="margin-top:16px"><div style="display:flex;gap:12px;align-items:flex-start"><span style="width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;justify-content:center">' + ICONS.warn + '</span><div><b>Bản demo mô phỏng kết nối — bản chính thức mới phát hành thật</b><p class="small muted" style="margin:3px 0 0">Trang demo tĩnh công khai không có nơi giữ khóa bí mật API và không ký số được. Bản chính thức có phía máy chủ — bản Google Sheet + Apps Script hoặc bản server riêng — sẽ gọi API thật của MISA meInvoice bằng tài khoản &amp; chữ ký số của chính xưởng, phát hành hóa đơn thật lên cơ quan thuế.</p></div></div></div>';
+  return h;
+}
+function bindMisa(){
+  var map = {"m-mst":"mst","m-account":"account","m-apikey":"apikey","m-serial":"serial","m-template":"template","m-env":"env","m-sign":"sign"};
+  Object.keys(map).forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", function(){ DB.misa[map[id]] = el.value; });
+    el.addEventListener("change", function(){ DB.misa[map[id]] = el.value; if (id==="m-env" || id==="m-sign") render(); });
+  });
+}
+
 /* ================= RENDER & ACTIONS ================= */
 var SCREENS = { home:viewHome, orders:viewOrders, "order-new":viewOrderNew, customers:viewCustomers,
   production:viewProduction, progress:viewProgress, inventory:viewInventory, moves:viewMoves,
   lowstock:viewLowstock, installs:viewInstalls, finance:viewFinance, debts:viewDebts,
-  staff:viewStaff, piece:viewPiece, catalog:viewCatalog, settings:viewSettings };
+  staff:viewStaff, piece:viewPiece, catalog:viewCatalog, settings:viewSettings, misa:viewMisa };
 function render(){
   var v = document.getElementById("view");
   if (state.screen.indexOf("g-")===0){ v.innerHTML = viewGroup(state.screen); return; }
@@ -1186,6 +1314,7 @@ function render(){
   if (state.screen==="order-new"){ bindOrderForm(); }
   if (state.screen==="orders"){ bindOrders(); }
   if (state.screen==="finance"){ bindFinance(); }
+  if (state.screen==="misa"){ bindMisa(); }
 }
 function openModal(html){ var m = document.getElementById("modal"); m.innerHTML = '<div class="modal-card">' + html + '</div>'; m.classList.add("open"); }
 function closeModal(){ var m = document.getElementById("modal"); m.classList.remove("open"); m.innerHTML = ""; }
@@ -1356,6 +1485,27 @@ document.addEventListener("click", function(ev){
     root.setProperty("--accent-soft", A.soft); root.setProperty("--accent-ink", A.ink);
     render();
   }
+  else if (act==="misa-test"){
+    if (DB.misa.checking) return;
+    DB.misa.checking = true; render();
+    setTimeout(function(){
+      DB.misa.checking = false; DB.misa.connected = true;
+      toast("Đã kết nối MISA meInvoice (mô phỏng) — môi trường " + (DB.misa.env==="prod" ? "Chính thức" : "Sandbox") + ".");
+      render();
+    }, 1100);
+  }
+  else if (act==="misa-disconnect"){ DB.misa.connected = false; toast("Đã ngắt kết nối MISA meInvoice."); render(); }
+  else if (act==="misa-issue"){
+    var inv = DB.misa.invoices.find(function(x){ return x.order===id; });
+    if (!inv) return;
+    if (!DB.misa.connected){ toast("Chưa kết nối MISA — bấm “Kiểm tra kết nối” ở đầu trang trước khi phát hành."); window.scrollTo(0,0); return; }
+    inv.no = String(DB.misa.nextNo).padStart(7,"0"); DB.misa.nextNo++;
+    inv.code = "AP26-" + inv.no.slice(-6) + "-MISA";
+    inv.date = "11/11/2026"; inv.status = "Đã phát hành";
+    toast("Đã phát hành hóa đơn điện tử " + inv.no + " cho đơn " + id + " qua MISA meInvoice (mô phỏng).");
+    render();
+  }
+  else if (act==="misa-view"){ var om = orderById(id); if (om) openDocPreview(orderDocOrder(om), "invoice"); }
   else if (act==="reset"){ resetDB(); toast("Đã đặt lại toàn bộ dữ liệu mẫu ban đầu."); go("settings"); }
 });
 
