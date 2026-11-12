@@ -453,7 +453,14 @@ var STOCK0 = [
   {id:"P10", name:"Chỉ may polyester", kind:"Phụ kiện", spec:"Cuộn 5.000 m", unit:"cuộn", stock:24, min:6, price:38000},
   {id:"P11", name:"Dây đai buộc rèm", kind:"Phụ kiện", spec:"Theo cặp", unit:"cái", stock:40, min:10, price:25000},
   {id:"P12", name:"Ốc vít & tắc kê", kind:"Phụ kiện", spec:"Hộp 200 bộ", unit:"hộp", stock:15, min:4, price:55000},
-  {id:"P13", name:"Bánh xe ray trượt", kind:"Phụ kiện", spec:"Bịch 20 cái", unit:"bịch", stock:8, min:3, price:60000}
+  {id:"P13", name:"Bánh xe ray trượt", kind:"Phụ kiện", spec:"Bịch 20 cái", unit:"bịch", stock:8, min:3, price:60000},
+  {id:"TP01", name:"Bộ rèm vải 2 lớp may sẵn — nâu be", kind:"Thành phẩm tự SX", spec:"Xưởng may xong, chờ lắp", unit:"bộ", stock:2, min:1, price:2450000},
+  {id:"TP02", name:"Bộ rèm voan + vải may sẵn — trắng kem", kind:"Thành phẩm tự SX", spec:"Xưởng may xong, chờ lắp", unit:"bộ", stock:1, min:1, price:1980000},
+  {id:"TP03", name:"Bộ rèm roman may sẵn — hoa nhí", kind:"Thành phẩm tự SX", spec:"Xưởng may xong, chờ lắp", unit:"bộ", stock:3, min:1, price:1650000},
+  {id:"N01", name:"Rèm cuốn thành phẩm nhập — trắng", kind:"Thành phẩm nhập", grp:"nhap", spec:"Nguyên bộ, kèm hộp & dây kéo", unit:"bộ", stock:6, min:2, price:890000},
+  {id:"N02", name:"Rèm cầu vồng thành phẩm nhập — kem", kind:"Thành phẩm nhập", grp:"nhap", spec:"Nguyên bộ, nhập đại lý", unit:"bộ", stock:4, min:2, price:1250000},
+  {id:"N03", name:"Rèm sáo nhôm thành phẩm nhập 25mm", kind:"Thành phẩm nhập", grp:"nhap", spec:"Nguyên bộ, kèm cơ cấu kéo", unit:"bộ", stock:5, min:2, price:980000},
+  {id:"N04", name:"Rèm sáo gỗ thành phẩm nhập 50mm", kind:"Thành phẩm nhập", grp:"nhap", spec:"Nguyên bộ, nhập đại lý", unit:"bộ", stock:2, min:1, price:2150000}
 ];
 var MOVES0 = [
   {id:"PN-031", date:"03/11/2026", kind:"Nhập", item:"Vải gấm cản sáng xám ghi", qty:"+60 m", ref:"NCC Vải Hà Đông — hóa đơn 1182"},
@@ -463,7 +470,9 @@ var MOVES0 = [
   {id:"XK-120", date:"06/11/2026", kind:"Xuất", item:"Vải roman cotton hoa nhí", qty:"−21 m", ref:"LSX-05 · Đơn DH2605"},
   {id:"PN-033", date:"07/11/2026", kind:"Nhập", item:"Động cơ rèm + remote", qty:"+2 bộ", ref:"NCC Thiết bị Hà Nội"},
   {id:"XK-121", date:"08/11/2026", kind:"Xuất", item:"Vải cầu vồng xám", qty:"−34 m", ref:"LSX-11 · Đơn DH2612"},
-  {id:"XK-122", date:"09/11/2026", kind:"Xuất", item:"Lá gỗ sáo 50mm nâu óc chó", qty:"−11 m²", ref:"LSX-07 · Đơn DH2608"}
+  {id:"XK-122", date:"09/11/2026", kind:"Xuất", item:"Lá gỗ sáo 50mm nâu óc chó", qty:"−11 m²", ref:"LSX-07 · Đơn DH2608"},
+  {id:"PN-034", date:"10/11/2026", kind:"Nhập", item:"Rèm cuốn thành phẩm nhập — trắng", qty:"+6 bộ", ref:"NCC Rèm Nhập Sài Gòn"},
+  {id:"XK-123", date:"11/11/2026", kind:"Xuất", item:"Rèm sáo nhôm thành phẩm nhập 25mm", qty:"−2 bộ", ref:"Đơn DH2614 · Xuất lắp đặt"}
 ];
 var EXPENSES0 = [
   {id:"PC-01", date:"03/11/2026", content:"Mua vải gấm xám ghi 60m — NCC Vải Hà Đông", amt:6850000, ref:"Hóa đơn 1182"},
@@ -584,9 +593,9 @@ var NAV = [
     {id:"production", name:"Lệnh sản xuất", desc:"Lệnh theo từng đơn — 6 công đoạn nghề rèm"},
     {id:"progress", name:"Tiến độ theo công đoạn", desc:"Công đoạn nào đang chạy, thợ nào phụ trách"}
   ]},
-  {id:"g-stock", name:"Kho vải & phụ kiện", icon:"box", children:[
-    {id:"inventory", name:"Tồn kho", desc:"Vải tính theo mét/cây, phụ kiện theo cái/bộ"},
-    {id:"moves", name:"Nhập – xuất kho", desc:"Phiếu nhập mua & xuất vải cho lệnh sản xuất"},
+  {id:"g-stock", name:"Kho hàng", icon:"box", children:[
+    {id:"inventory", name:"Tồn kho", desc:"2 nhóm: hàng xưởng tự sản xuất (gồm nguyên vật liệu) & thành phẩm nhập từ nơi khác"},
+    {id:"moves", name:"Nhập – xuất kho", desc:"Phiếu nhập mua vật tư/thành phẩm & xuất cho lệnh sản xuất, đơn lắp"},
     {id:"lowstock", name:"Cảnh báo tồn thấp", desc:"Mặt hàng dưới mức tối thiểu — cần đặt thêm"}
   ]},
   {id:"g-install", name:"Lắp đặt & lịch hẹn", icon:"tool", children:[
@@ -1140,17 +1149,31 @@ function stockRow(s, withBtns){
     + (withBtns ? '<td class="r"><button class="btn small" data-act="stock-in" data-id="' + s.id + '">Nhập</button> <button class="btn small" data-act="stock-out" data-id="' + s.id + '">Xuất</button></td>' : '')
     + '</tr>';
 }
-function viewInventory(){
-  var h = head("Tồn kho vải & phụ kiện", "Vải tính theo mét (theo khổ vải), lá sáo theo m², phụ kiện theo cây/cái/bộ. Nhập khi mua vật tư, xuất tự gắn với lệnh sản xuất.", true);
-  h += '<div class="card tbl-wrap"><table class="tbl"><thead><tr><th>Mặt hàng</th><th class="r">Tồn hiện tại</th><th class="r">Mức tối thiểu</th><th class="r">Giá nhập</th><th>Trạng thái</th><th></th></tr></thead><tbody>';
-  DB.stock.forEach(function(s){ h += stockRow(s, true); });
+function stockGrp(s){ return s.grp || "sx"; }
+function stockTable(list){
+  var h = '<div class="card tbl-wrap"><table class="tbl"><thead><tr><th>Mặt hàng</th><th class="r">Tồn hiện tại</th><th class="r">Mức tối thiểu</th><th class="r">Giá vốn / giá nhập</th><th>Trạng thái</th><th></th></tr></thead><tbody>';
+  list.forEach(function(s){ h += stockRow(s, true); });
   h += '</tbody></table></div>';
-  var val = DB.stock.reduce(function(sum,s){ return sum + s.stock*s.price; },0);
-  h += '<p class="small muted" style="margin-top:12px">Giá trị tồn kho ước tính: <b class="num">' + fmt(val) + '</b> · ' + DB.stock.length + ' mặt hàng · ' + lowItems().length + ' mặt hàng sắp hết.</p>';
+  return h;
+}
+function stockVal(list){ return list.reduce(function(sum,s){ return sum + s.stock*s.price; },0); }
+function viewInventory(){
+  var sx = DB.stock.filter(function(s){ return stockGrp(s)==="sx"; });
+  var nhap = DB.stock.filter(function(s){ return stockGrp(s)==="nhap"; });
+  var h = head("Tồn kho", "Kho của xưởng tách 2 nhóm riêng: hàng xưởng tự sản xuất — gồm cả nguyên vật liệu — và thành phẩm nhập nguyên bộ từ nơi khác.", true);
+  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 1 · Hàng xưởng tự sản xuất</h3><span class="tag green">Tự sản xuất</span></div>';
+  h += '<p class="small muted" style="margin:0 0 10px">Gồm nguyên vật liệu (vải theo mét/khổ, lá sáo theo m², phụ kiện theo cây/cái/bộ) dùng cho lệnh sản xuất, và thành phẩm do xưởng tự may/gia công xong đang chờ lắp. Xuất nguyên vật liệu tự gắn với lệnh sản xuất.</p>';
+  h += stockTable(sx);
+  h += '<p class="small muted" style="margin:10px 0 22px">Giá trị tồn nhóm tự sản xuất: <b class="num">' + fmt(stockVal(sx)) + '</b> · ' + sx.length + ' mặt hàng.</p>';
+  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 2 · Thành phẩm nhập từ nơi khác</h3><span class="tag orange">Nhập ngoài</span></div>';
+  h += '<p class="small muted" style="margin:0 0 10px">Mua nguyên bộ thành phẩm từ nhà cung cấp / đại lý, nhập kho để bán và lắp luôn cho khách — không qua công đoạn sản xuất của xưởng.</p>';
+  h += stockTable(nhap);
+  h += '<p class="small muted" style="margin:10px 0 0">Giá trị tồn nhóm thành phẩm nhập: <b class="num">' + fmt(stockVal(nhap)) + '</b> · ' + nhap.length + ' mặt hàng.</p>';
+  h += '<p class="small muted" style="margin-top:12px">Tổng giá trị tồn kho ước tính: <b class="num">' + fmt(stockVal(DB.stock)) + '</b> · ' + DB.stock.length + ' mặt hàng · ' + lowItems().length + ' mặt hàng sắp hết.</p>';
   return h;
 }
 function viewMoves(){
-  var h = head("Nhập – xuất kho", "Phiếu nhập khi mua vải/phụ kiện từ nhà cung cấp; phiếu xuất gắn với lệnh sản xuất cụ thể.", true);
+  var h = head("Nhập – xuất kho", "Phiếu nhập khi mua vải/phụ kiện hoặc thành phẩm nguyên bộ từ nhà cung cấp; phiếu xuất gắn với lệnh sản xuất hoặc đơn lắp đặt cụ thể.", true);
   h += '<div class="card tbl-wrap"><table class="tbl"><thead><tr><th>Phiếu</th><th>Ngày</th><th>Loại</th><th>Mặt hàng</th><th class="r">Số lượng</th><th>Liên quan</th></tr></thead><tbody>';
   DB.moves.forEach(function(m){
     h += '<tr><td><b>' + m.id + '</b></td><td class="num">' + m.date + '</td><td>' + (m.kind==="Nhập" ? '<span class="tag green">Nhập</span>' : '<span class="tag orange">Xuất</span>') + '</td><td>' + esc(m.item) + '</td><td class="r num"><b>' + esc(m.qty) + '</b></td><td class="small muted">' + esc(m.ref) + '</td></tr>';
@@ -1294,7 +1317,7 @@ function viewSettings(){
   h += '<div class="card card-pad"><h3>Hóa đơn điện tử — MISA meInvoice</h3><div class="sub">Kết nối meInvoice để phát hành hóa đơn điện tử &amp; ký số ngay từ đơn hàng, không nhập liệu 2 lần</div>'
     + '<div style="margin-top:11px">' + (DB.misa.connected ? '<span class="tag green">Đã kết nối (mô phỏng)</span>' : '<span class="tag gray">Chưa kết nối</span>') + '</div>'
     + '<button class="btn" style="margin-top:12px" data-act="go" data-id="misa">' + ICONS.file + ' Mở màn hình kết nối MISA</button></div>';
-  h += '<div class="card card-pad"><h3>Về bản demo này</h3><p class="small muted" style="margin:6px 0 0">Đây là bản <b>demo tĩnh</b> với dữ liệu mẫu của “Lumira Curtains”: 12 khách hàng, 18 đơn hàng, 14 lệnh sản xuất, 24 mặt hàng kho — số liệu khớp nhau giữa các mục (đơn ↔ lệnh sản xuất ↔ phiếu thu ↔ lịch lắp).<br/><br/>Mọi thao tác thêm/sửa (tạo đơn, chuyển trạng thái, xong công đoạn, nhập/xuất kho, thu tiền…) chỉ chạy <b>trong phiên xem hiện tại</b>; tải lại trang là quay về dữ liệu mẫu ban đầu. Bản chính thức sẽ nối dữ liệu thật (Google Sheet / cơ sở dữ liệu riêng của xưởng) để lưu trữ lâu dài và dùng chung nhiều máy.</p>'
+  h += '<div class="card card-pad"><h3>Về bản demo này</h3><p class="small muted" style="margin:6px 0 0">Đây là bản <b>demo tĩnh</b> với dữ liệu mẫu của “Lumira Curtains”: 12 khách hàng, 18 đơn hàng, 14 lệnh sản xuất, 31 mặt hàng kho (2 nhóm: xưởng tự sản xuất gồm nguyên vật liệu, và thành phẩm nhập từ nơi khác) — số liệu khớp nhau giữa các mục (đơn ↔ lệnh sản xuất ↔ phiếu thu ↔ lịch lắp).<br/><br/>Mọi thao tác thêm/sửa (tạo đơn, chuyển trạng thái, xong công đoạn, nhập/xuất kho, thu tiền…) chỉ chạy <b>trong phiên xem hiện tại</b>; tải lại trang là quay về dữ liệu mẫu ban đầu. Bản chính thức sẽ nối dữ liệu thật (Google Sheet / cơ sở dữ liệu riêng của xưởng) để lưu trữ lâu dài và dùng chung nhiều máy.</p>'
     + '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:13px"><button class="btn" data-act="reset">Đặt lại dữ liệu mẫu</button><button class="btn" data-act="home">Về Trang Chủ</button></div></div>';
   h += '<div class="card card-pad"><h3>Bản quyền</h3><p class="small muted" style="margin:6px 0 0">Phần mềm quản lý xưởng sản xuất rèm cửa — phát triển theo khung “Phần Mềm Quản Lý” theo ngành.<br/><b style="color:var(--ink)">Bản quyền thuộc sở hữu của hanglex9x@gmail.com</b></p></div>';
   h += '</div></div>';
