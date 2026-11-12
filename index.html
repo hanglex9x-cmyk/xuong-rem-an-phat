@@ -594,7 +594,7 @@ var NAV = [
     {id:"progress", name:"Tiến độ theo công đoạn", desc:"Công đoạn nào đang chạy, thợ nào phụ trách"}
   ]},
   {id:"g-stock", name:"Kho hàng", icon:"box", children:[
-    {id:"inventory", name:"Tồn kho", desc:"2 nhóm: hàng xưởng tự sản xuất (gồm nguyên vật liệu) & thành phẩm nhập từ nơi khác"},
+    {id:"inventory", name:"Tồn kho", desc:"2 nhóm: Sản xuất (nguyên vật liệu & thành phẩm tự làm) & Hàng nhập (thành phẩm mua ngoài)"},
     {id:"moves", name:"Nhập – xuất kho", desc:"Phiếu nhập mua vật tư/thành phẩm & xuất cho lệnh sản xuất, đơn lắp"},
     {id:"lowstock", name:"Cảnh báo tồn thấp", desc:"Mặt hàng dưới mức tối thiểu — cần đặt thêm"}
   ]},
@@ -1142,7 +1142,7 @@ function viewProgress(){
 /* ================= KHO ================= */
 function stockRow(s, withBtns){
   var low = s.stock<=s.min;
-  return '<tr><td><b>' + esc(s.name) + '</b><div class="tiny muted">' + s.id + ' · ' + esc(s.kind) + ' · ' + esc(s.spec) + '</div></td>'
+  return '<tr><td><b>' + esc(s.name) + '</b><div class="tiny muted">' + s.id + ' · ' + esc(s.kind) + ' · ' + esc(s.spec) + '</div><span class="tag ' + (stockGrp(s)==="nhap" ? 'orange' : 'green') + '" style="margin-top:5px">' + (stockGrp(s)==="nhap" ? 'Hàng nhập' : 'Sản xuất') + '</span></td>'
     + '<td class="r num"><b>' + fmtN(s.stock) + '</b> ' + esc(s.unit) + '</td><td class="r num muted">' + fmtN(s.min) + ' ' + esc(s.unit) + '</td>'
     + '<td class="r num">' + fmt(s.price) + '/' + esc(s.unit) + '</td>'
     + '<td>' + (low ? '<span class="tag red">Sắp hết</span>' : '<span class="tag green">Đủ dùng</span>') + '</td>'
@@ -1160,15 +1160,15 @@ function stockVal(list){ return list.reduce(function(sum,s){ return sum + s.stoc
 function viewInventory(){
   var sx = DB.stock.filter(function(s){ return stockGrp(s)==="sx"; });
   var nhap = DB.stock.filter(function(s){ return stockGrp(s)==="nhap"; });
-  var h = head("Tồn kho", "Kho của xưởng tách 2 nhóm riêng: hàng xưởng tự sản xuất — gồm cả nguyên vật liệu — và thành phẩm nhập nguyên bộ từ nơi khác.", true);
-  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 1 · Hàng xưởng tự sản xuất</h3><span class="tag green">Tự sản xuất</span></div>';
+  var h = head("Tồn kho", "Kho tách 2 nhóm riêng: Sản xuất — nguyên vật liệu và thành phẩm xưởng tự làm; Hàng nhập — thành phẩm mua nguyên bộ từ nơi khác.", true);
+  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 1 · Sản xuất</h3><span class="tag green">Sản xuất</span></div>';
   h += '<p class="small muted" style="margin:0 0 10px">Gồm nguyên vật liệu (vải theo mét/khổ, lá sáo theo m², phụ kiện theo cây/cái/bộ) dùng cho lệnh sản xuất, và thành phẩm do xưởng tự may/gia công xong đang chờ lắp. Xuất nguyên vật liệu tự gắn với lệnh sản xuất.</p>';
   h += stockTable(sx);
-  h += '<p class="small muted" style="margin:10px 0 22px">Giá trị tồn nhóm tự sản xuất: <b class="num">' + fmt(stockVal(sx)) + '</b> · ' + sx.length + ' mặt hàng.</p>';
-  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 2 · Thành phẩm nhập từ nơi khác</h3><span class="tag orange">Nhập ngoài</span></div>';
+  h += '<p class="small muted" style="margin:10px 0 22px">Giá trị tồn nhóm Sản xuất: <b class="num">' + fmt(stockVal(sx)) + '</b> · ' + sx.length + ' mặt hàng.</p>';
+  h += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 6px"><h3 style="margin:0">Nhóm 2 · Hàng nhập</h3><span class="tag orange">Hàng nhập</span></div>';
   h += '<p class="small muted" style="margin:0 0 10px">Mua nguyên bộ thành phẩm từ nhà cung cấp / đại lý, nhập kho để bán và lắp luôn cho khách — không qua công đoạn sản xuất của xưởng.</p>';
   h += stockTable(nhap);
-  h += '<p class="small muted" style="margin:10px 0 0">Giá trị tồn nhóm thành phẩm nhập: <b class="num">' + fmt(stockVal(nhap)) + '</b> · ' + nhap.length + ' mặt hàng.</p>';
+  h += '<p class="small muted" style="margin:10px 0 0">Giá trị tồn nhóm Hàng nhập: <b class="num">' + fmt(stockVal(nhap)) + '</b> · ' + nhap.length + ' mặt hàng.</p>';
   h += '<p class="small muted" style="margin-top:12px">Tổng giá trị tồn kho ước tính: <b class="num">' + fmt(stockVal(DB.stock)) + '</b> · ' + DB.stock.length + ' mặt hàng · ' + lowItems().length + ' mặt hàng sắp hết.</p>';
   return h;
 }
@@ -1317,7 +1317,7 @@ function viewSettings(){
   h += '<div class="card card-pad"><h3>Hóa đơn điện tử — MISA meInvoice</h3><div class="sub">Kết nối meInvoice để phát hành hóa đơn điện tử &amp; ký số ngay từ đơn hàng, không nhập liệu 2 lần</div>'
     + '<div style="margin-top:11px">' + (DB.misa.connected ? '<span class="tag green">Đã kết nối (mô phỏng)</span>' : '<span class="tag gray">Chưa kết nối</span>') + '</div>'
     + '<button class="btn" style="margin-top:12px" data-act="go" data-id="misa">' + ICONS.file + ' Mở màn hình kết nối MISA</button></div>';
-  h += '<div class="card card-pad"><h3>Về bản demo này</h3><p class="small muted" style="margin:6px 0 0">Đây là bản <b>demo tĩnh</b> với dữ liệu mẫu của “Lumira Curtains”: 12 khách hàng, 18 đơn hàng, 14 lệnh sản xuất, 31 mặt hàng kho (2 nhóm: xưởng tự sản xuất gồm nguyên vật liệu, và thành phẩm nhập từ nơi khác) — số liệu khớp nhau giữa các mục (đơn ↔ lệnh sản xuất ↔ phiếu thu ↔ lịch lắp).<br/><br/>Mọi thao tác thêm/sửa (tạo đơn, chuyển trạng thái, xong công đoạn, nhập/xuất kho, thu tiền…) chỉ chạy <b>trong phiên xem hiện tại</b>; tải lại trang là quay về dữ liệu mẫu ban đầu. Bản chính thức sẽ nối dữ liệu thật (Google Sheet / cơ sở dữ liệu riêng của xưởng) để lưu trữ lâu dài và dùng chung nhiều máy.</p>'
+  h += '<div class="card card-pad"><h3>Về bản demo này</h3><p class="small muted" style="margin:6px 0 0">Đây là bản <b>demo tĩnh</b> với dữ liệu mẫu của “Lumira Curtains”: 12 khách hàng, 18 đơn hàng, 14 lệnh sản xuất, 31 mặt hàng kho (2 nhóm: Sản xuất — gồm nguyên vật liệu, và Hàng nhập) — số liệu khớp nhau giữa các mục (đơn ↔ lệnh sản xuất ↔ phiếu thu ↔ lịch lắp).<br/><br/>Mọi thao tác thêm/sửa (tạo đơn, chuyển trạng thái, xong công đoạn, nhập/xuất kho, thu tiền…) chỉ chạy <b>trong phiên xem hiện tại</b>; tải lại trang là quay về dữ liệu mẫu ban đầu. Bản chính thức sẽ nối dữ liệu thật (Google Sheet / cơ sở dữ liệu riêng của xưởng) để lưu trữ lâu dài và dùng chung nhiều máy.</p>'
     + '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:13px"><button class="btn" data-act="reset">Đặt lại dữ liệu mẫu</button><button class="btn" data-act="home">Về Trang Chủ</button></div></div>';
   h += '<div class="card card-pad"><h3>Bản quyền</h3><p class="small muted" style="margin:6px 0 0">Phần mềm quản lý xưởng sản xuất rèm cửa — phát triển theo khung “Phần Mềm Quản Lý” theo ngành.<br/><b style="color:var(--ink)">Bản quyền thuộc sở hữu của hanglex9x@gmail.com</b></p></div>';
   h += '</div></div>';
